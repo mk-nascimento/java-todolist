@@ -12,7 +12,7 @@ import jakarta.persistence.Id;
 import lombok.Data;
 
 @Data
-@Entity(name="_users")
+@Entity(name = "_users")
 public class UserModel {
     @Id
     @GeneratedValue(generator = "UUID")

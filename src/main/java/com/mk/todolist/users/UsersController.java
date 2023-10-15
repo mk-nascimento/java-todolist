@@ -3,11 +3,12 @@ package com.mk.todolist.users;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.mk.todolist.exceptions.ErrorResponse;
 
 import at.favre.lib.crypto.bcrypt.BCrypt;
 
@@ -18,24 +19,19 @@ public class UsersController {
     private IUserRepository usersRepository;
 
     @PostMapping()
-    public ResponseEntity create(@RequestBody UserModel model) {
-        var dbUser = this.usersRepository.findByUsername(model.getUsername());
+    public ResponseEntity<?> create(@RequestBody UserModel entity) {
+        var dbUser = this.usersRepository.findByUsername(entity.getUsername());
 
         if (dbUser instanceof UserModel) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User already exists");
+            return ResponseEntity.badRequest().body(new ErrorResponse("User already exists"));
         }
 
-        var pass = BCrypt.withDefaults().hashToString(12, model.getPassword().toCharArray());
-        model.setPassword(pass);
+        var pass = BCrypt.withDefaults().hashToString(12, entity.getPassword().toCharArray());
+        entity.setPassword(pass);
+        String username = entity.getUsername();
+        entity.setUsername(username.trim());
 
-        var user = this.usersRepository.save(model);
+        var user = this.usersRepository.save(entity);
         return ResponseEntity.status(HttpStatus.CREATED).body(user);
-    }
-
-    @GetMapping()
-    public ResponseEntity read() {
-        var users = this.usersRepository.findAll();
-
-        return ResponseEntity.status(HttpStatus.OK).body(users);
     }
 }
